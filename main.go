@@ -2,8 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"time"
+	"net/http"
+	"net/http/httputil"
 )
 
 func main() {
@@ -34,4 +37,32 @@ func main() {
 		doc := docs[id]
 		log.Printf("%d\t%s\n", id, doc.Text)
 	}
+	// handle route using handler function
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        	fmt.Fprintf(w, "Welcome to new server!")
+		
+		reqDump, err := httputil.DumpRequest(r, true)
+		if err != nil {
+			log.Fatal(err)
+		}
+		searchQuery := r.URL.Path[1:]
+
+		searchedIDs := idx.search(searchQuery)
+		res := ""
+		for _, idN := range searchedIDs {
+			doc := docs[idN]
+			res += fmt.Sprintf("%d\t%s\n", idN, doc.Text) + "\n\n\n\n"
+			//res += string(int(idN)) + " " + doc.Text+ "\n\n\n\n"
+		}
+
+		fmt.Fprintf(w,"REQUEST:\n%s", string(reqDump))
+		fmt.Fprintf(w,"REQUEST:\n%s", r.URL.Path[1:])
+		fmt.Fprintf(w,"Search Result:\n%s",res)
+
+
+	})
+
+        // listen to port
+    	http.ListenAndServe(":5050", nil)
+
 }
